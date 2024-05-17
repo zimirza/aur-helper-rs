@@ -1,4 +1,7 @@
-use std::process;
+use std::{
+    io::{stdin, stdout, Write},
+    process,
+};
 
 use clap::Parser;
 use serde::{Deserialize, Serialize};
@@ -69,13 +72,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         process::exit(1);
     }
 
-    println!("Installing package {}", args.install);
+    println!("Установка пакета {}", args.install);
     let url = format!("https://aur.archlinux.org/rpc/v5/search/{}", args.install);
 
     let client = reqwest::Client::new();
     let response = client.get(url).send().await?;
     let response = response.json::<Response>().await.unwrap();
-    println!("{:#?}", response);
+    let items = response.results;
+    let items: Vec<&Item> = items
+        .iter()
+        .filter(|item| args.install == item.package_base)
+        .collect();
+    let item = items.get(0);
+    if item.is_none() {
+        panic!("Не найдено ни одного пакета для установки");
+    }
+
+    println!("{:#?}", item);
+
+    let mut s = String::new();
+    print!("Хотите ли вы установить {}: ", args.install);
+    let _ = stdout().flush();
+    stdin().read_line(&mut s).expect("неправильный string");
+    if let Some('\n') = s.chars().next_back() {
+        s.pop();
+    }
+    if let Some('\r') = s.chars().next_back() {
+        s.pop();
+    }
+    if s == "да" {
+        println!("{}", s);
+    }
 
     Ok(())
 }
