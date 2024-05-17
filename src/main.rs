@@ -88,20 +88,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         panic!("Не найдено ни одного пакета для установки");
     }
 
-    println!("{:#?}", item);
+    if let Some(item) = item {
+        println!("{:#?}", item);
 
-    let mut s = String::new();
-    print!("Хотите ли вы установить {}: ", args.install);
-    let _ = stdout().flush();
-    stdin().read_line(&mut s).expect("неправильный string");
-    if let Some('\n') = s.chars().next_back() {
-        s.pop();
-    }
-    if let Some('\r') = s.chars().next_back() {
-        s.pop();
-    }
-    if s == "да" {
-        println!("{}", s);
+        let mut s = String::new();
+        print!("Хотите ли вы установить {}: ", args.install);
+        let _ = stdout().flush();
+        stdin().read_line(&mut s).expect("неправильный string");
+        if let Some('\n') = s.chars().next_back() {
+            s.pop();
+        }
+        if let Some('\r') = s.chars().next_back() {
+            s.pop();
+        }
+        if s == "да" {
+            let url = format!("{}{}", item.url, item.urlpath);
+            println!("Installing {} from {}", args.install, url);
+        }
     }
 
     Ok(())
